@@ -1,4 +1,4 @@
-import { FIREPLACE_SCENE } from './fireplace-scene.js?v=3';
+import { FIREPLACE_SCENE } from './fireplace-scene.js?v=5';
 
 export async function createFireScene(host) {
   const PIXI = window.PIXI;
@@ -17,38 +17,31 @@ export async function createFireScene(host) {
   const texture = await PIXI.Assets.load(FIREPLACE_SCENE.image);
   const world = new PIXI.Container();
   const background = new PIXI.Sprite(texture);
-  const emberLayer = new PIXI.Container();
-
   world.addChild(background);
-  world.addChild(emberLayer);
   app.stage.addChild(world);
 
-  const glows = FIREPLACE_SCENE.embers.map((region) => {
-    const group = new PIXI.Container();
+  // Diagnostic proof: one clearly visible localized ember region.
+  // This intentionally exaggerates the cycle so actual-device testing can
+  // establish that the mechanism works before we tune it for realism.
+  const region = {
+    x: 0.475,
+    y: 0.625,
+    rx: 0.105,
+    ry: 0.028
+  };
 
-    const emberCopy = new PIXI.Sprite(texture);
-    emberCopy.blendMode = 'add';
-    emberCopy.alpha = region.min;
+  const diagnosticGlow = new PIXI.Graphics()
+    .ellipse(
+      region.x * FIREPLACE_SCENE.width,
+      region.y * FIREPLACE_SCENE.height,
+      region.rx * FIREPLACE_SCENE.width,
+      region.ry * FIREPLACE_SCENE.height
+    )
+    .fill({ color: 0xff6a18, alpha: 1 });
 
-    const mask = new PIXI.Graphics()
-      .ellipse(
-        region.x * FIREPLACE_SCENE.width,
-        region.y * FIREPLACE_SCENE.height,
-        region.rx * FIREPLACE_SCENE.width,
-        region.ry * FIREPLACE_SCENE.height
-      )
-      .fill(0xffffff);
-
-    const blur = new PIXI.BlurFilter({ strength: 10, quality: 2 });
-    mask.filters = [blur];
-
-    emberCopy.mask = mask;
-    group.addChild(mask);
-    group.addChild(emberCopy);
-    emberLayer.addChild(group);
-
-    return { emberCopy, region };
-  });
+  diagnosticGlow.blendMode = 'add';
+  diagnosticGlow.filters = [new PIXI.BlurFilter({ strength: 16, quality: 2 })];
+  world.addChild(diagnosticGlow);
 
   function compose() {
     const rect = host.getBoundingClientRect();
@@ -81,23 +74,14 @@ export async function createFireScene(host) {
 
   app.ticker.add(() => {
     if (reduceMotion.matches) {
-      for (const { emberCopy, region } of glows) emberCopy.alpha = region.min;
+      diagnosticGlow.alpha = 0.12;
       return;
     }
 
-    const now = performance.now();
-
-    for (const { emberCopy, region } of glows) {
-      const primary = Math.sin(now * region.speed + region.phase);
-      const secondary = Math.sin(now * region.speed * 0.43 + region.phase * 1.7);
-      const tertiary = Math.sin(now * region.speed * 0.19 + region.phase * 2.3);
-      const life = Math.max(
-        0,
-        Math.min(1, 0.5 + primary * 0.26 + secondary * 0.16 + tertiary * 0.08)
-      );
-
-      emberCopy.alpha = region.min + (region.max - region.min) * life;
-    }
+    // Six-second full cycle: intentionally obvious for verification.
+    const cycle = (performance.now() % 6000) / 6000;
+    const wave = (Math.sin(cycle * Math.PI * 2 - Math.PI / 2) + 1) / 2;
+    diagnosticGlow.alpha = 0.03 + wave * 0.72;
   });
 
   return {
