@@ -1,4 +1,4 @@
-import { FIREPLACE_SCENE } from './fireplace-scene.js?v=13';
+import { FIREPLACE_SCENE } from './fireplace-scene.js?v=14';
 
 export async function createFireScene(host) {
   const PIXI = window.PIXI;
@@ -23,20 +23,20 @@ export async function createFireScene(host) {
   world.addChild(emberLayer);
   app.stage.addChild(world);
 
-  // v13: high-contrast perceptual threshold proof on the verified basic Graphics path.
-  // Existing ember marks now cycle from light gray to white-hot so visibility is unambiguous.
+  // v14: natural-color proof derived from the verified v13 perceptual threshold.
+  // Ember marks retain strong luminance change while shifting from red-orange through amber to near-white hot.
   // No filters, masks, blend modes, shaders, or post-processing.
   const emberRegions = [
-    { x: 602, y: 626, w: 18, h: 4, color: 0xffffff, min: 0.04, max: 0.72, period: 3600, phase: 0.2 },
-    { x: 628, y: 633, w: 10, h: 5, color: 0xffffff, min: 0.03, max: 0.64, period: 5100, phase: 2.0 },
-    { x: 654, y: 615, w: 16, h: 4, color: 0xffffff, min: 0.04, max: 0.76, period: 4300, phase: 1.1 },
-    { x: 681, y: 630, w: 12, h: 5, color: 0xffffff, min: 0.03, max: 0.66, period: 5900, phase: 3.6 },
-    { x: 710, y: 623, w: 20, h: 4, color: 0xffffff, min: 0.04, max: 0.70, period: 4700, phase: 4.8 },
-    { x: 741, y: 633, w: 11, h: 5, color: 0xffffff, min: 0.03, max: 0.62, period: 6500, phase: 2.7 },
-    { x: 769, y: 619, w: 17, h: 4, color: 0xffffff, min: 0.04, max: 0.74, period: 5400, phase: 5.4 },
-    { x: 799, y: 631, w: 13, h: 5, color: 0xffffff, min: 0.03, max: 0.64, period: 7000, phase: 0.8 },
-    { x: 828, y: 620, w: 18, h: 4, color: 0xffffff, min: 0.04, max: 0.68, period: 4900, phase: 3.2 },
-    { x: 853, y: 629, w: 10, h: 5, color: 0xffffff, min: 0.03, max: 0.60, period: 6200, phase: 1.7 }
+    { x: 602, y: 626, w: 18, h: 4, color: 0xffffff, min: 0.82, max: 1.00, period: 3600, phase: 0.2 },
+    { x: 628, y: 633, w: 10, h: 5, color: 0xffffff, min: 0.82, max: 1.00, period: 5100, phase: 2.0 },
+    { x: 654, y: 615, w: 16, h: 4, color: 0xffffff, min: 0.82, max: 1.00, period: 4300, phase: 1.1 },
+    { x: 681, y: 630, w: 12, h: 5, color: 0xffffff, min: 0.82, max: 1.00, period: 5900, phase: 3.6 },
+    { x: 710, y: 623, w: 20, h: 4, color: 0xffffff, min: 0.82, max: 1.00, period: 4700, phase: 4.8 },
+    { x: 741, y: 633, w: 11, h: 5, color: 0xffffff, min: 0.82, max: 1.00, period: 6500, phase: 2.7 },
+    { x: 769, y: 619, w: 17, h: 4, color: 0xffffff, min: 0.82, max: 1.00, period: 5400, phase: 5.4 },
+    { x: 799, y: 631, w: 13, h: 5, color: 0xffffff, min: 0.82, max: 1.00, period: 7000, phase: 0.8 },
+    { x: 828, y: 620, w: 18, h: 4, color: 0xffffff, min: 0.82, max: 1.00, period: 4900, phase: 3.2 },
+    { x: 853, y: 629, w: 10, h: 5, color: 0xffffff, min: 0.82, max: 1.00, period: 6200, phase: 1.7 }
   ];
 
   const embers = emberRegions.map((region, index) => {
@@ -55,7 +55,7 @@ export async function createFireScene(host) {
         .fill(region.color);
     }
 
-    ember.alpha = region.min;
+    ember.alpha = 1;
     emberLayer.addChild(ember);
     return { ember, region };
   });
@@ -92,13 +92,31 @@ export async function createFireScene(host) {
 
     for (const { ember, region } of embers) {
       if (reduceMotion.matches) {
-        ember.alpha = region.min;
+        ember.tint = 0xff6a18;
+        ember.alpha = 0.82;
         continue;
       }
 
       const primary = Math.sin((elapsed / region.period) * Math.PI * 2 + region.phase);
       const secondary = Math.sin((elapsed / (region.period * 1.63)) * Math.PI * 2 + region.phase * 1.77);
       const life = Math.max(0, Math.min(1, 0.5 + primary * 0.38 + secondary * 0.12));
+      // Preserve visibility by changing emitted-looking color/luminance more than transparency.
+      // Low: red-orange coal. Mid: amber/yellow. High: near-white hot.
+      let r;
+      let g;
+      let b;
+      if (life < 0.58) {
+        const t = life / 0.58;
+        r = 255;
+        g = Math.round(82 + (184 - 82) * t);
+        b = Math.round(18 + (42 - 18) * t);
+      } else {
+        const t = (life - 0.58) / 0.42;
+        r = 255;
+        g = Math.round(184 + (244 - 184) * t);
+        b = Math.round(42 + (214 - 42) * t);
+      }
+      ember.tint = (r << 16) | (g << 8) | b;
       ember.alpha = region.min + (region.max - region.min) * life;
     }
   });
