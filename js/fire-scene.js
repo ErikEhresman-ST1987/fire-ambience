@@ -1,4 +1,4 @@
-import { FIREPLACE_SCENE } from './fireplace-scene.js?v=12';
+import { FIREPLACE_SCENE } from './fireplace-scene.js?v=13';
 
 export async function createFireScene(host) {
   const PIXI = window.PIXI;
@@ -23,20 +23,20 @@ export async function createFireScene(host) {
   world.addChild(emberLayer);
   app.stage.addChild(world);
 
-  // v12: perceptible natural ember proof on the verified basic Graphics path.
-  // Small hot points and short seams replace broad translucent glow ovals.
+  // v13: high-contrast perceptual threshold proof on the verified basic Graphics path.
+  // Existing ember marks now cycle from light gray to white-hot so visibility is unambiguous.
   // No filters, masks, blend modes, shaders, or post-processing.
   const emberRegions = [
-    { x: 602, y: 626, w: 18, h: 4, color: 0xffb52e, min: 0.04, max: 0.72, period: 3600, phase: 0.2 },
-    { x: 628, y: 633, w: 10, h: 5, color: 0xff6a12, min: 0.03, max: 0.64, period: 5100, phase: 2.0 },
-    { x: 654, y: 615, w: 16, h: 4, color: 0xffc13a, min: 0.04, max: 0.76, period: 4300, phase: 1.1 },
-    { x: 681, y: 630, w: 12, h: 5, color: 0xff7b18, min: 0.03, max: 0.66, period: 5900, phase: 3.6 },
-    { x: 710, y: 623, w: 20, h: 4, color: 0xffad27, min: 0.04, max: 0.70, period: 4700, phase: 4.8 },
-    { x: 741, y: 633, w: 11, h: 5, color: 0xff6810, min: 0.03, max: 0.62, period: 6500, phase: 2.7 },
-    { x: 769, y: 619, w: 17, h: 4, color: 0xffc43d, min: 0.04, max: 0.74, period: 5400, phase: 5.4 },
-    { x: 799, y: 631, w: 13, h: 5, color: 0xff7415, min: 0.03, max: 0.64, period: 7000, phase: 0.8 },
-    { x: 828, y: 620, w: 18, h: 4, color: 0xffa923, min: 0.04, max: 0.68, period: 4900, phase: 3.2 },
-    { x: 853, y: 629, w: 10, h: 5, color: 0xff6710, min: 0.03, max: 0.60, period: 6200, phase: 1.7 }
+    { x: 602, y: 626, w: 18, h: 4, color: 0xffffff, min: 0.04, max: 0.72, period: 3600, phase: 0.2 },
+    { x: 628, y: 633, w: 10, h: 5, color: 0xffffff, min: 0.03, max: 0.64, period: 5100, phase: 2.0 },
+    { x: 654, y: 615, w: 16, h: 4, color: 0xffffff, min: 0.04, max: 0.76, period: 4300, phase: 1.1 },
+    { x: 681, y: 630, w: 12, h: 5, color: 0xffffff, min: 0.03, max: 0.66, period: 5900, phase: 3.6 },
+    { x: 710, y: 623, w: 20, h: 4, color: 0xffffff, min: 0.04, max: 0.70, period: 4700, phase: 4.8 },
+    { x: 741, y: 633, w: 11, h: 5, color: 0xffffff, min: 0.03, max: 0.62, period: 6500, phase: 2.7 },
+    { x: 769, y: 619, w: 17, h: 4, color: 0xffffff, min: 0.04, max: 0.74, period: 5400, phase: 5.4 },
+    { x: 799, y: 631, w: 13, h: 5, color: 0xffffff, min: 0.03, max: 0.64, period: 7000, phase: 0.8 },
+    { x: 828, y: 620, w: 18, h: 4, color: 0xffffff, min: 0.04, max: 0.68, period: 4900, phase: 3.2 },
+    { x: 853, y: 629, w: 10, h: 5, color: 0xffffff, min: 0.03, max: 0.60, period: 6200, phase: 1.7 }
   ];
 
   const embers = emberRegions.map((region, index) => {
