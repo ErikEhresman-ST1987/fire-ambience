@@ -1,4 +1,4 @@
-import { FIREPLACE_SCENE } from './fireplace-scene.js?v=10';
+import { FIREPLACE_SCENE } from './fireplace-scene.js?v=11';
 
 export async function createFireScene(host) {
   const PIXI = window.PIXI;
@@ -17,31 +17,33 @@ export async function createFireScene(host) {
   const texture = await PIXI.Assets.load(FIREPLACE_SCENE.image);
   const world = new PIXI.Container();
   const background = new PIXI.Sprite(texture);
-  const proofLayer = new PIXI.Container();
+  const emberLayer = new PIXI.Container();
 
   world.addChild(background);
-  world.addChild(proofLayer);
+  world.addChild(emberLayer);
   app.stage.addChild(world);
 
-  // v10 diagnostic: deliberately use only PixiJS' basic Graphics + alpha path.
-  // No masks, filters, blend modes, duplicated textures, or post-processing.
-  // These markers sit directly over the ember bed so iPad Safari can prove
-  // rendering, positioning, and animation independently of the failed effect path.
-  const proofRegions = [
-    { x: 625, y: 681, rx: 28, ry: 10, period: 1800, phase: 0.0 },
-    { x: 690, y: 666, rx: 30, ry: 11, period: 2300, phase: 1.4 },
-    { x: 755, y: 685, rx: 32, ry: 10, period: 2000, phase: 2.7 },
-    { x: 820, y: 670, rx: 29, ry: 10, period: 2600, phase: 4.0 }
+  // v11: first natural treatment on the verified basic Graphics + alpha path.
+  // Coordinates are corrected upward from the v10 hearth diagnostic into
+  // the visible coal/ember bed. No filters, masks, blend modes, or shaders.
+  const emberRegions = [
+    { x: 610, y: 628, rx: 20, ry: 6, color: 0xff5a12, min: 0.02, max: 0.30, period: 4200, phase: 0.2 },
+    { x: 650, y: 615, rx: 18, ry: 6, color: 0xff7a18, min: 0.02, max: 0.34, period: 5600, phase: 1.6 },
+    { x: 690, y: 631, rx: 22, ry: 6, color: 0xff4d0a, min: 0.02, max: 0.28, period: 4800, phase: 3.0 },
+    { x: 730, y: 620, rx: 19, ry: 5, color: 0xff8a20, min: 0.02, max: 0.32, period: 6500, phase: 4.4 },
+    { x: 770, y: 632, rx: 21, ry: 6, color: 0xff5610, min: 0.02, max: 0.30, period: 5300, phase: 2.3 },
+    { x: 810, y: 617, rx: 18, ry: 5, color: 0xff7618, min: 0.02, max: 0.27, period: 7100, phase: 5.1 },
+    { x: 850, y: 629, rx: 19, ry: 5, color: 0xff4f0c, min: 0.02, max: 0.25, period: 6000, phase: 0.9 }
   ];
 
-  const markers = proofRegions.map((region, index) => {
-    const marker = new PIXI.Graphics()
+  const embers = emberRegions.map((region) => {
+    const glow = new PIXI.Graphics()
       .ellipse(region.x, region.y, region.rx, region.ry)
-      .fill(index % 2 === 0 ? 0x00ff66 : 0x00e5ff);
+      .fill(region.color);
 
-    marker.alpha = 0.12;
-    proofLayer.addChild(marker);
-    return { marker, region };
+    glow.alpha = region.min;
+    emberLayer.addChild(glow);
+    return { glow, region };
   });
 
   function compose() {
@@ -68,13 +70,22 @@ export async function createFireScene(host) {
   resizeObserver.observe(host);
   window.addEventListener('orientationchange', compose, { passive: true });
 
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   let elapsed = 0;
+
   app.ticker.add((ticker) => {
     elapsed += ticker.deltaMS;
 
-    for (const { marker, region } of markers) {
-      const wave = (Math.sin((elapsed / region.period) * Math.PI * 2 + region.phase) + 1) / 2;
-      marker.alpha = 0.12 + wave * 0.78;
+    for (const { glow, region } of embers) {
+      if (reduceMotion.matches) {
+        glow.alpha = region.min;
+        continue;
+      }
+
+      const primary = Math.sin((elapsed / region.period) * Math.PI * 2 + region.phase);
+      const secondary = Math.sin((elapsed / (region.period * 1.71)) * Math.PI * 2 + region.phase * 1.8);
+      const life = Math.max(0, Math.min(1, 0.5 + primary * 0.36 + secondary * 0.14));
+      glow.alpha = region.min + (region.max - region.min) * life;
     }
   });
 
