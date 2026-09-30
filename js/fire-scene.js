@@ -6,7 +6,6 @@ export async function createFireScene(host) {
 
   const app = new PIXI.Application();
   await app.init({
-    resizeTo: host,
     background: '#000000',
     antialias: true,
     autoDensity: true,
@@ -40,11 +39,19 @@ export async function createFireScene(host) {
   });
 
   function compose() {
-    const viewW = app.renderer.width / app.renderer.resolution;
-    const viewH = app.renderer.height / app.renderer.resolution;
-    const scale = Math.max(viewW / FIREPLACE_SCENE.width, viewH / FIREPLACE_SCENE.height);
+    const rect = host.getBoundingClientRect();
+    const viewW = Math.max(1, rect.width);
+    const viewH = Math.max(1, rect.height);
+
+    app.renderer.resize(viewW, viewH);
+
+    const scale = Math.max(
+      viewW / FIREPLACE_SCENE.width,
+      viewH / FIREPLACE_SCENE.height
+    );
 
     world.scale.set(scale);
+
     const scaledW = FIREPLACE_SCENE.width * scale;
     const scaledH = FIREPLACE_SCENE.height * scale;
 
@@ -53,21 +60,28 @@ export async function createFireScene(host) {
   }
 
   compose();
-  window.addEventListener('resize', compose, { passive: true });
+
+  const resizeObserver = new ResizeObserver(compose);
+  resizeObserver.observe(host);
+  window.addEventListener('orientationchange', compose, { passive: true });
 
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  app.ticker.add((ticker) => {
+  app.ticker.add(() => {
     if (reduceMotion.matches) {
       for (const { glow, region } of glows) glow.alpha = region.min;
       return;
     }
 
     const now = performance.now();
+
     for (const { glow, region } of glows) {
       const primary = Math.sin(now * region.speed + region.phase);
       const secondary = Math.sin(now * region.speed * 0.43 + region.phase * 1.7);
-      const life = Math.max(0, Math.min(1, 0.5 + primary * 0.32 + secondary * 0.18));
+      const life = Math.max(
+        0,
+        Math.min(1, 0.5 + primary * 0.32 + secondary * 0.18)
+      );
       glow.alpha = region.min + (region.max - region.min) * life;
     }
   });
@@ -75,7 +89,8 @@ export async function createFireScene(host) {
   return {
     app,
     destroy() {
-      window.removeEventListener('resize', compose);
+      resizeObserver.disconnect();
+      window.removeEventListener('orientationchange', compose);
       app.destroy(true, { children: true });
     }
   };
