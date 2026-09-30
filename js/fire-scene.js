@@ -1,4 +1,4 @@
-import { FIREPLACE_SCENE } from './fireplace-scene.js?v=9';
+import { FIREPLACE_SCENE } from './fireplace-scene.js?v=10';
 
 export async function createFireScene(host) {
   const PIXI = window.PIXI;
@@ -17,44 +17,31 @@ export async function createFireScene(host) {
   const texture = await PIXI.Assets.load(FIREPLACE_SCENE.image);
   const world = new PIXI.Container();
   const background = new PIXI.Sprite(texture);
-  const emberLayer = new PIXI.Container();
+  const proofLayer = new PIXI.Container();
 
   world.addChild(background);
-  world.addChild(emberLayer);
+  world.addChild(proofLayer);
   app.stage.addChild(world);
 
-  // v9: animate the approved scene's own pixels, revealed only through
-  // localized ember masks. No painted orange glow geometry is displayed.
-  const emberRegions = [
-    { x: 620, y: 650, rx: 44, ry: 15, min: 0.00, max: 0.58, period: 5200, phase: 0.2 },
-    { x: 680, y: 670, rx: 38, ry: 14, min: 0.00, max: 0.64, period: 6900, phase: 1.7 },
-    { x: 735, y: 648, rx: 42, ry: 14, min: 0.00, max: 0.56, period: 6000, phase: 3.1 },
-    { x: 790, y: 672, rx: 40, ry: 13, min: 0.00, max: 0.62, period: 7700, phase: 4.6 },
-    { x: 845, y: 652, rx: 36, ry: 13, min: 0.00, max: 0.54, period: 6400, phase: 2.5 },
-    { x: 720, y: 690, rx: 52, ry: 12, min: 0.00, max: 0.48, period: 8300, phase: 5.4 },
-    { x: 815, y: 692, rx: 48, ry: 12, min: 0.00, max: 0.46, period: 7200, phase: 0.9 }
+  // v10 diagnostic: deliberately use only PixiJS' basic Graphics + alpha path.
+  // No masks, filters, blend modes, duplicated textures, or post-processing.
+  // These markers sit directly over the ember bed so iPad Safari can prove
+  // rendering, positioning, and animation independently of the failed effect path.
+  const proofRegions = [
+    { x: 625, y: 681, rx: 28, ry: 10, period: 1800, phase: 0.0 },
+    { x: 690, y: 666, rx: 30, ry: 11, period: 2300, phase: 1.4 },
+    { x: 755, y: 685, rx: 32, ry: 10, period: 2000, phase: 2.7 },
+    { x: 820, y: 670, rx: 29, ry: 10, period: 2600, phase: 4.0 }
   ];
 
-  const embers = emberRegions.map((region, index) => {
-    const pixelCopy = new PIXI.Sprite(texture);
-    pixelCopy.blendMode = 'screen';
-
-    const mask = new PIXI.Graphics()
+  const markers = proofRegions.map((region, index) => {
+    const marker = new PIXI.Graphics()
       .ellipse(region.x, region.y, region.rx, region.ry)
-      .fill({ color: 0xffffff, alpha: 1 })
-      .ellipse(region.x - region.rx * 0.42, region.y + 2, region.rx * 0.48, region.ry * 0.70)
-      .fill({ color: 0xffffff, alpha: 1 })
-      .ellipse(region.x + region.rx * 0.38, region.y - 1, region.rx * 0.42, region.ry * 0.62)
-      .fill({ color: 0xffffff, alpha: 1 });
+      .fill(index % 2 === 0 ? 0x00ff66 : 0x00e5ff);
 
-    mask.filters = [new PIXI.BlurFilter({ strength: 7 + (index % 2) * 2, quality: 1 })];
-    pixelCopy.mask = mask;
-    pixelCopy.alpha = 0;
-
-    emberLayer.addChild(mask);
-    emberLayer.addChild(pixelCopy);
-
-    return { pixelCopy, region };
+    marker.alpha = 0.12;
+    proofLayer.addChild(marker);
+    return { marker, region };
   });
 
   function compose() {
@@ -81,22 +68,13 @@ export async function createFireScene(host) {
   resizeObserver.observe(host);
   window.addEventListener('orientationchange', compose, { passive: true });
 
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   let elapsed = 0;
-
   app.ticker.add((ticker) => {
     elapsed += ticker.deltaMS;
 
-    for (const { pixelCopy, region } of embers) {
-      if (reduceMotion.matches) {
-        pixelCopy.alpha = region.min;
-        continue;
-      }
-
-      const primary = Math.sin((elapsed / region.period) * Math.PI * 2 + region.phase);
-      const secondary = Math.sin((elapsed / (region.period * 1.67)) * Math.PI * 2 + region.phase * 1.83);
-      const life = Math.max(0, Math.min(1, 0.5 + primary * 0.36 + secondary * 0.14));
-      pixelCopy.alpha = region.min + (region.max - region.min) * life;
+    for (const { marker, region } of markers) {
+      const wave = (Math.sin((elapsed / region.period) * Math.PI * 2 + region.phase) + 1) / 2;
+      marker.alpha = 0.12 + wave * 0.78;
     }
   });
 
