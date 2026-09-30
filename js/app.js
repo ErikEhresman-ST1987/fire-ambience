@@ -1,4 +1,4 @@
-import { createFireScene } from './fire-scene.js?v=3';
+import { createFireScene } from './fire-scene.js?v=4';
 
 const host = document.querySelector('#app');
 const status = document.querySelector('#status');
