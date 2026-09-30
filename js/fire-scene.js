@@ -1,4 +1,4 @@
-import { FIREPLACE_SCENE } from './fireplace-scene.js?v=5';
+import { FIREPLACE_SCENE } from './fireplace-scene.js?v=6';
 
 export async function createFireScene(host) {
   const PIXI = window.PIXI;
@@ -18,48 +18,31 @@ export async function createFireScene(host) {
   const world = new PIXI.Container();
   const background = new PIXI.Sprite(texture);
   world.addChild(background);
+
+  // Pure animation diagnostic. Deliberately obvious and artistically wrong.
+  // If this pulses, the Pixi ticker/render path works on the target device.
+  const testPatch = new PIXI.Graphics()
+    .rect(650, 610, 240, 100)
+    .fill({ color: 0x00ff00, alpha: 1 });
+  testPatch.alpha = 0;
+  world.addChild(testPatch);
+
   app.stage.addChild(world);
-
-  // Diagnostic proof: one clearly visible localized ember region.
-  // This intentionally exaggerates the cycle so actual-device testing can
-  // establish that the mechanism works before we tune it for realism.
-  const region = {
-    x: 0.475,
-    y: 0.625,
-    rx: 0.105,
-    ry: 0.028
-  };
-
-  const diagnosticGlow = new PIXI.Graphics()
-    .ellipse(
-      region.x * FIREPLACE_SCENE.width,
-      region.y * FIREPLACE_SCENE.height,
-      region.rx * FIREPLACE_SCENE.width,
-      region.ry * FIREPLACE_SCENE.height
-    )
-    .fill({ color: 0xff6a18, alpha: 1 });
-
-  diagnosticGlow.blendMode = 'add';
-  diagnosticGlow.filters = [new PIXI.BlurFilter({ strength: 16, quality: 2 })];
-  world.addChild(diagnosticGlow);
 
   function compose() {
     const rect = host.getBoundingClientRect();
     const viewW = Math.max(1, rect.width);
     const viewH = Math.max(1, rect.height);
-
     app.renderer.resize(viewW, viewH);
 
     const scale = Math.max(
       viewW / FIREPLACE_SCENE.width,
       viewH / FIREPLACE_SCENE.height
     );
-
     world.scale.set(scale);
 
     const scaledW = FIREPLACE_SCENE.width * scale;
     const scaledH = FIREPLACE_SCENE.height * scale;
-
     world.x = (viewW - scaledW) * FIREPLACE_SCENE.focus.x;
     world.y = (viewH - scaledH) * FIREPLACE_SCENE.focus.y;
   }
@@ -70,18 +53,11 @@ export async function createFireScene(host) {
   resizeObserver.observe(host);
   window.addEventListener('orientationchange', compose, { passive: true });
 
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-
-  app.ticker.add(() => {
-    if (reduceMotion.matches) {
-      diagnosticGlow.alpha = 0.12;
-      return;
-    }
-
-    // Six-second full cycle: intentionally obvious for verification.
-    const cycle = (performance.now() % 6000) / 6000;
-    const wave = (Math.sin(cycle * Math.PI * 2 - Math.PI / 2) + 1) / 2;
-    diagnosticGlow.alpha = 0.03 + wave * 0.72;
+  let elapsed = 0;
+  app.ticker.add((ticker) => {
+    elapsed += ticker.deltaMS;
+    const cycle = (elapsed % 4000) / 4000;
+    testPatch.alpha = (Math.sin(cycle * Math.PI * 2 - Math.PI / 2) + 1) / 2;
   });
 
   return {
