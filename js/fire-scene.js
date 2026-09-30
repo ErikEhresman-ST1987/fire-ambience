@@ -1,4 +1,4 @@
-import { FIREPLACE_SCENE } from './fireplace-scene.js?v=15';
+import { FIREPLACE_SCENE } from './fireplace-scene.js?v=16';
 
 export async function createFireScene(host) {
   const PIXI = window.PIXI;
@@ -23,17 +23,17 @@ export async function createFireScene(host) {
   world.addChild(emberLayer);
   app.stage.addChild(world);
 
-  // v15: larger texture-derived ember regions.
+  // v16: deliberately obvious texture-derived calibration.
   // Each region is a clipped duplicate of the approved scene itself, so the
   // animated material retains the photograph's real coal/log texture rather
   // than introducing geometric dots or lines.
   const regions = [
-    { x: 575, y: 600, w: 105, h: 48, min: 0.10, max: 0.62, period: 5200, phase: 0.3 },
-    { x: 645, y: 594, w: 115, h: 55, min: 0.08, max: 0.68, period: 6900, phase: 2.1 },
-    { x: 720, y: 598, w: 120, h: 52, min: 0.09, max: 0.64, period: 5800, phase: 4.0 },
-    { x: 795, y: 601, w: 110, h: 48, min: 0.08, max: 0.60, period: 7600, phase: 1.2 },
-    { x: 615, y: 630, w: 130, h: 38, min: 0.06, max: 0.48, period: 8300, phase: 5.2 },
-    { x: 735, y: 628, w: 145, h: 40, min: 0.06, max: 0.50, period: 7100, phase: 3.0 }
+    { x: 575, y: 600, w: 105, h: 48, min: 0.02, max: 1.00, period: 5200, phase: 0.3 },
+    { x: 645, y: 594, w: 115, h: 55, min: 0.02, max: 1.00, period: 6900, phase: 2.1 },
+    { x: 720, y: 598, w: 120, h: 52, min: 0.02, max: 1.00, period: 5800, phase: 4.0 },
+    { x: 795, y: 601, w: 110, h: 48, min: 0.02, max: 1.00, period: 7600, phase: 1.2 },
+    { x: 615, y: 630, w: 130, h: 38, min: 0.02, max: 0.92, period: 8300, phase: 5.2 },
+    { x: 735, y: 628, w: 145, h: 40, min: 0.02, max: 0.94, period: 7100, phase: 3.0 }
   ];
 
   const emberRegions = regions.map((region) => {
@@ -88,7 +88,7 @@ export async function createFireScene(host) {
     for (const { copy, region } of emberRegions) {
       if (reduceMotion.matches) {
         copy.alpha = region.min;
-        copy.tint = 0xffb86b;
+        copy.tint = 0xff9a32;
         continue;
       }
 
@@ -96,10 +96,11 @@ export async function createFireScene(host) {
       const secondary = Math.sin((elapsed / (region.period * 1.67)) * Math.PI * 2 + region.phase * 1.83);
       const life = Math.max(0, Math.min(1, 0.5 + primary * 0.36 + secondary * 0.14));
 
-      // Warm the real source pixels as they brighten. The duplicated source
-      // texture preserves coal/log detail; alpha supplies the visible heat rise.
-      const g = Math.round(170 + 72 * life);
-      const b = Math.round(70 + 145 * life);
+      // Deliberately exaggerated calibration: retain the real source texture,
+      // but drive it from hot orange toward near-white with a very wide alpha
+      // range. This establishes a clearly perceptible upper bound on iPad.
+      const g = Math.round(120 + 132 * life);
+      const b = Math.round(35 + 210 * life);
       copy.tint = (255 << 16) | (g << 8) | b;
       copy.alpha = region.min + (region.max - region.min) * life;
     }
