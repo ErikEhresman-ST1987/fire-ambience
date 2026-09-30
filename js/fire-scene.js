@@ -1,4 +1,4 @@
-import { FIREPLACE_SCENE } from './fireplace-scene.js?v=14';
+import { FIREPLACE_SCENE } from './fireplace-scene.js?v=15';
 
 export async function createFireScene(host) {
   const PIXI = window.PIXI;
@@ -23,41 +23,36 @@ export async function createFireScene(host) {
   world.addChild(emberLayer);
   app.stage.addChild(world);
 
-  // v14: natural-color proof derived from the verified v13 perceptual threshold.
-  // Ember marks retain strong luminance change while shifting from red-orange through amber to near-white hot.
-  // No filters, masks, blend modes, shaders, or post-processing.
-  const emberRegions = [
-    { x: 602, y: 626, w: 18, h: 4, color: 0xffffff, min: 0.82, max: 1.00, period: 3600, phase: 0.2 },
-    { x: 628, y: 633, w: 10, h: 5, color: 0xffffff, min: 0.82, max: 1.00, period: 5100, phase: 2.0 },
-    { x: 654, y: 615, w: 16, h: 4, color: 0xffffff, min: 0.82, max: 1.00, period: 4300, phase: 1.1 },
-    { x: 681, y: 630, w: 12, h: 5, color: 0xffffff, min: 0.82, max: 1.00, period: 5900, phase: 3.6 },
-    { x: 710, y: 623, w: 20, h: 4, color: 0xffffff, min: 0.82, max: 1.00, period: 4700, phase: 4.8 },
-    { x: 741, y: 633, w: 11, h: 5, color: 0xffffff, min: 0.82, max: 1.00, period: 6500, phase: 2.7 },
-    { x: 769, y: 619, w: 17, h: 4, color: 0xffffff, min: 0.82, max: 1.00, period: 5400, phase: 5.4 },
-    { x: 799, y: 631, w: 13, h: 5, color: 0xffffff, min: 0.82, max: 1.00, period: 7000, phase: 0.8 },
-    { x: 828, y: 620, w: 18, h: 4, color: 0xffffff, min: 0.82, max: 1.00, period: 4900, phase: 3.2 },
-    { x: 853, y: 629, w: 10, h: 5, color: 0xffffff, min: 0.82, max: 1.00, period: 6200, phase: 1.7 }
+  // v15: larger texture-derived ember regions.
+  // Each region is a clipped duplicate of the approved scene itself, so the
+  // animated material retains the photograph's real coal/log texture rather
+  // than introducing geometric dots or lines.
+  const regions = [
+    { x: 575, y: 600, w: 105, h: 48, min: 0.10, max: 0.62, period: 5200, phase: 0.3 },
+    { x: 645, y: 594, w: 115, h: 55, min: 0.08, max: 0.68, period: 6900, phase: 2.1 },
+    { x: 720, y: 598, w: 120, h: 52, min: 0.09, max: 0.64, period: 5800, phase: 4.0 },
+    { x: 795, y: 601, w: 110, h: 48, min: 0.08, max: 0.60, period: 7600, phase: 1.2 },
+    { x: 615, y: 630, w: 130, h: 38, min: 0.06, max: 0.48, period: 8300, phase: 5.2 },
+    { x: 735, y: 628, w: 145, h: 40, min: 0.06, max: 0.50, period: 7100, phase: 3.0 }
   ];
 
-  const embers = emberRegions.map((region, index) => {
-    const ember = new PIXI.Graphics();
+  const emberRegions = regions.map((region) => {
+    const container = new PIXI.Container();
 
-    if (index % 3 === 0) {
-      ember
-        .moveTo(region.x - region.w, region.y + 1)
-        .lineTo(region.x - region.w * 0.35, region.y - region.h)
-        .lineTo(region.x + region.w * 0.30, region.y + region.h * 0.25)
-        .lineTo(region.x + region.w, region.y - 1)
-        .stroke({ color: region.color, width: 3 });
-    } else {
-      ember
-        .ellipse(region.x, region.y, region.w * 0.42, region.h)
-        .fill(region.color);
-    }
+    const copy = new PIXI.Sprite(texture);
+    copy.tint = 0xffd6a0;
+    copy.alpha = region.min;
 
-    ember.alpha = 1;
-    emberLayer.addChild(ember);
-    return { ember, region };
+    const mask = new PIXI.Graphics()
+      .roundRect(region.x, region.y, region.w, region.h, Math.min(16, region.h * 0.42))
+      .fill(0xffffff);
+
+    container.addChild(copy);
+    container.addChild(mask);
+    copy.mask = mask;
+    emberLayer.addChild(container);
+
+    return { copy, region };
   });
 
   function compose() {
@@ -90,34 +85,23 @@ export async function createFireScene(host) {
   app.ticker.add((ticker) => {
     elapsed += ticker.deltaMS;
 
-    for (const { ember, region } of embers) {
+    for (const { copy, region } of emberRegions) {
       if (reduceMotion.matches) {
-        ember.tint = 0xff6a18;
-        ember.alpha = 0.82;
+        copy.alpha = region.min;
+        copy.tint = 0xffb86b;
         continue;
       }
 
       const primary = Math.sin((elapsed / region.period) * Math.PI * 2 + region.phase);
-      const secondary = Math.sin((elapsed / (region.period * 1.63)) * Math.PI * 2 + region.phase * 1.77);
-      const life = Math.max(0, Math.min(1, 0.5 + primary * 0.38 + secondary * 0.12));
-      // Preserve visibility by changing emitted-looking color/luminance more than transparency.
-      // Low: red-orange coal. Mid: amber/yellow. High: near-white hot.
-      let r;
-      let g;
-      let b;
-      if (life < 0.58) {
-        const t = life / 0.58;
-        r = 255;
-        g = Math.round(82 + (184 - 82) * t);
-        b = Math.round(18 + (42 - 18) * t);
-      } else {
-        const t = (life - 0.58) / 0.42;
-        r = 255;
-        g = Math.round(184 + (244 - 184) * t);
-        b = Math.round(42 + (214 - 42) * t);
-      }
-      ember.tint = (r << 16) | (g << 8) | b;
-      ember.alpha = region.min + (region.max - region.min) * life;
+      const secondary = Math.sin((elapsed / (region.period * 1.67)) * Math.PI * 2 + region.phase * 1.83);
+      const life = Math.max(0, Math.min(1, 0.5 + primary * 0.36 + secondary * 0.14));
+
+      // Warm the real source pixels as they brighten. The duplicated source
+      // texture preserves coal/log detail; alpha supplies the visible heat rise.
+      const g = Math.round(170 + 72 * life);
+      const b = Math.round(70 + 145 * life);
+      copy.tint = (255 << 16) | (g << 8) | b;
+      copy.alpha = region.min + (region.max - region.min) * life;
     }
   });
 
