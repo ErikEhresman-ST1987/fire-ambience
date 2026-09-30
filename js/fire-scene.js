@@ -9,7 +9,8 @@ export async function createFireScene(host) {
     background: '#000000',
     antialias: true,
     autoDensity: true,
-    resolution: Math.min(window.devicePixelRatio || 1, 2)
+    resolution: Math.min(window.devicePixelRatio || 1, 2),
+    autoStart: true
   });
   host.appendChild(app.canvas);
 
@@ -23,19 +24,30 @@ export async function createFireScene(host) {
   app.stage.addChild(world);
 
   const glows = FIREPLACE_SCENE.embers.map((region) => {
-    const glow = new PIXI.Graphics()
-      .ellipse(0, 0, region.rx * FIREPLACE_SCENE.width, region.ry * FIREPLACE_SCENE.height)
-      .fill({ color: 0xff5a18, alpha: 1 });
+    const group = new PIXI.Container();
 
-    glow.position.set(
-      region.x * FIREPLACE_SCENE.width,
-      region.y * FIREPLACE_SCENE.height
-    );
-    glow.alpha = region.min;
-    glow.blendMode = 'add';
-    glow.filters = [new PIXI.BlurFilter({ strength: 18, quality: 2 })];
-    emberLayer.addChild(glow);
-    return { glow, region };
+    const emberCopy = new PIXI.Sprite(texture);
+    emberCopy.blendMode = 'add';
+    emberCopy.alpha = region.min;
+
+    const mask = new PIXI.Graphics()
+      .ellipse(
+        region.x * FIREPLACE_SCENE.width,
+        region.y * FIREPLACE_SCENE.height,
+        region.rx * FIREPLACE_SCENE.width,
+        region.ry * FIREPLACE_SCENE.height
+      )
+      .fill(0xffffff);
+
+    const blur = new PIXI.BlurFilter({ strength: 10, quality: 2 });
+    mask.filters = [blur];
+
+    emberCopy.mask = mask;
+    group.addChild(mask);
+    group.addChild(emberCopy);
+    emberLayer.addChild(group);
+
+    return { emberCopy, region };
   });
 
   function compose() {
@@ -69,20 +81,22 @@ export async function createFireScene(host) {
 
   app.ticker.add(() => {
     if (reduceMotion.matches) {
-      for (const { glow, region } of glows) glow.alpha = region.min;
+      for (const { emberCopy, region } of glows) emberCopy.alpha = region.min;
       return;
     }
 
     const now = performance.now();
 
-    for (const { glow, region } of glows) {
+    for (const { emberCopy, region } of glows) {
       const primary = Math.sin(now * region.speed + region.phase);
       const secondary = Math.sin(now * region.speed * 0.43 + region.phase * 1.7);
+      const tertiary = Math.sin(now * region.speed * 0.19 + region.phase * 2.3);
       const life = Math.max(
         0,
-        Math.min(1, 0.5 + primary * 0.32 + secondary * 0.18)
+        Math.min(1, 0.5 + primary * 0.26 + secondary * 0.16 + tertiary * 0.08)
       );
-      glow.alpha = region.min + (region.max - region.min) * life;
+
+      emberCopy.alpha = region.min + (region.max - region.min) * life;
     }
   });
 
