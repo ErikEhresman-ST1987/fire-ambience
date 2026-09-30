@@ -1,7 +1,10 @@
 name: Fetch pinned PixiJS runtime
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/fetch-pixi.yml"
 
 permissions:
   contents: write
