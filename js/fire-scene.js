@@ -1,4 +1,4 @@
-import { FIREPLACE_SCENE } from './fireplace-scene.js?v=7';
+import { FIREPLACE_SCENE } from './fireplace-scene.js?v=8';
 
 export async function createFireScene(host) {
   const PIXI = window.PIXI;
@@ -17,38 +17,55 @@ export async function createFireScene(host) {
   const texture = await PIXI.Assets.load(FIREPLACE_SCENE.image);
   const world = new PIXI.Container();
   const background = new PIXI.Sprite(texture);
-  const emberLayer = new PIXI.Container();
+  const livingLightLayer = new PIXI.Container();
 
   world.addChild(background);
-  world.addChild(emberLayer);
+  world.addChild(livingLightLayer);
   app.stage.addChild(world);
 
   const emberRegions = [
-    { x: 620, y: 650, rx: 38, ry: 11, min: 0.01, max: 0.17, period: 5100, phase: 0.2 },
-    { x: 680, y: 670, rx: 31, ry: 10, min: 0.01, max: 0.20, period: 6800, phase: 1.7 },
-    { x: 735, y: 648, rx: 36, ry: 10, min: 0.01, max: 0.16, period: 5900, phase: 3.1 },
-    { x: 790, y: 672, rx: 34, ry: 9, min: 0.01, max: 0.19, period: 7600, phase: 4.6 },
-    { x: 845, y: 652, rx: 30, ry: 9, min: 0.01, max: 0.15, period: 6300, phase: 2.5 },
-    { x: 720, y: 690, rx: 46, ry: 8, min: 0.01, max: 0.13, period: 8200, phase: 5.4 },
-    { x: 815, y: 692, rx: 42, ry: 8, min: 0.01, max: 0.12, period: 7100, phase: 0.9 }
+    { x: 620, y: 650, rx: 40, ry: 12, min: 0.02, max: 0.38, period: 5100, phase: 0.2 },
+    { x: 680, y: 670, rx: 33, ry: 11, min: 0.02, max: 0.43, period: 6800, phase: 1.7 },
+    { x: 735, y: 648, rx: 38, ry: 11, min: 0.02, max: 0.36, period: 5900, phase: 3.1 },
+    { x: 790, y: 672, rx: 36, ry: 10, min: 0.02, max: 0.41, period: 7600, phase: 4.6 },
+    { x: 845, y: 652, rx: 32, ry: 10, min: 0.02, max: 0.34, period: 6300, phase: 2.5 },
+    { x: 720, y: 690, rx: 48, ry: 9, min: 0.01, max: 0.29, period: 8200, phase: 5.4 },
+    { x: 815, y: 692, rx: 44, ry: 9, min: 0.01, max: 0.27, period: 7100, phase: 0.9 }
   ];
 
   const embers = emberRegions.map((region, index) => {
-    const glow = new PIXI.Graphics();
-
-    // A few overlapping small shapes avoid one obvious geometric oval.
-    glow
+    const glow = new PIXI.Graphics()
       .ellipse(region.x, region.y, region.rx, region.ry)
       .fill({ color: 0xff4d0a, alpha: 1 })
       .ellipse(region.x - region.rx * 0.42, region.y + 2, region.rx * 0.45, region.ry * 0.65)
-      .fill({ color: 0xff8a18, alpha: 0.72 })
+      .fill({ color: 0xff8a18, alpha: 0.78 })
       .ellipse(region.x + region.rx * 0.38, region.y - 1, region.rx * 0.38, region.ry * 0.55)
-      .fill({ color: 0xffb12b, alpha: 0.55 });
+      .fill({ color: 0xffc03a, alpha: 0.62 });
 
     glow.alpha = region.min;
     glow.blendMode = 'add';
     glow.filters = [new PIXI.BlurFilter({ strength: 5 + (index % 2) * 2, quality: 1 })];
-    emberLayer.addChild(glow);
+    livingLightLayer.addChild(glow);
+    return { glow, region };
+  });
+
+  // Existing candle/light sources in the approved artwork.
+  // Coordinates are in the canonical 1536x1024 scene.
+  const candleRegions = [
+    { x: 443, y: 146, rx: 18, ry: 30, min: 0.015, max: 0.115, period: 3900, phase: 0.6 },
+    { x: 500, y: 183, rx: 18, ry: 28, min: 0.012, max: 0.095, period: 4700, phase: 2.4 },
+    { x: 77,  y: 811, rx: 31, ry: 38, min: 0.010, max: 0.080, period: 4300, phase: 4.1 }
+  ];
+
+  const candles = candleRegions.map((region) => {
+    const glow = new PIXI.Graphics()
+      .ellipse(region.x, region.y, region.rx, region.ry)
+      .fill({ color: 0xffb347, alpha: 1 });
+
+    glow.alpha = region.min;
+    glow.blendMode = 'add';
+    glow.filters = [new PIXI.BlurFilter({ strength: 15, quality: 1 })];
+    livingLightLayer.addChild(glow);
     return { glow, region };
   });
 
@@ -91,6 +108,18 @@ export async function createFireScene(host) {
       const primary = Math.sin((elapsed / region.period) * Math.PI * 2 + region.phase);
       const secondary = Math.sin((elapsed / (region.period * 1.73)) * Math.PI * 2 + region.phase * 1.9);
       const life = Math.max(0, Math.min(1, 0.5 + primary * 0.34 + secondary * 0.16));
+      glow.alpha = region.min + (region.max - region.min) * life;
+    }
+
+    for (const { glow, region } of candles) {
+      if (reduceMotion.matches) {
+        glow.alpha = region.min;
+        continue;
+      }
+
+      const slow = Math.sin((elapsed / region.period) * Math.PI * 2 + region.phase);
+      const drift = Math.sin((elapsed / (region.period * 0.61)) * Math.PI * 2 + region.phase * 2.2);
+      const life = Math.max(0, Math.min(1, 0.5 + slow * 0.32 + drift * 0.12));
       glow.alpha = region.min + (region.max - region.min) * life;
     }
   });
