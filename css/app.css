@@ -35,3 +35,28 @@ body {
   color: rgba(255, 255, 255, 0.72);
   font: 16px/1.4 system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
 }
+
+
+#start-fire {
+  position: absolute;
+  left: 50%;
+  bottom: max(32px, calc(env(safe-area-inset-bottom) + 20px));
+  z-index: 2;
+  min-width: 132px;
+  min-height: 48px;
+  padding: 11px 20px;
+  border: 1px solid rgba(255, 225, 181, 0.42);
+  border-radius: 999px;
+  background: rgba(30, 18, 12, 0.72);
+  color: rgba(255, 241, 219, 0.96);
+  font: 600 16px/1 system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  backdrop-filter: blur(8px);
+  transform: translateX(-50%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 220ms ease;
+}
+
+#start-fire.is-ready { opacity: 1; pointer-events: auto; }
+#start-fire.is-hidden { opacity: 0; pointer-events: none; }
