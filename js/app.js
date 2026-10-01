@@ -1,5 +1,5 @@
 import { createFireScene } from './fire-scene.js?v=20';
-import { createFireAudio } from './fire-audio.js?v=20';
+import { createFireAudio } from './fire-audio.js?v=21';
 
 const host = document.querySelector('#app');
 const status = document.querySelector('#status');
