@@ -1,2 +1,16 @@
-// Fire Ambience application entry point.
-// Increment 2 will initialize the approved PixiJS ember-animation proof here.
+import { createFireScene } from './fire-scene.js?v=19';
+
+const host = document.querySelector('#app');
+const status = document.querySelector('#status');
+
+async function start() {
+  try {
+    await createFireScene(host);
+    status?.remove();
+  } catch (error) {
+    console.error(error);
+    if (status) status.textContent = 'Fire scene could not start.';
+  }
+}
+
+start();
