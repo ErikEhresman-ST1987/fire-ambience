@@ -16,7 +16,8 @@ Primary target: iPad Safari. Browser-first delivery; offline normal use is a des
 - Repository foundation: established
 - v18 ember treatment: used/evaluated on iPad and approved as the protected ember checkpoint
 - v19 restrained low-flame proof: used on iPad and retained as the current visual checkpoint
-- v20 continuous-audio proof: implemented; actual iPad verification/evaluation pending
+- v20 continuous-audio proof: verified/evaluated on iPad; audio was somewhat more vigorous than the restrained dying-fire visuals
+- v21 energy-match adjustment: default audio level reduced from 70% to 55%; published for real-use evaluation
 - Sparks, additional scenes, procedural audio, polished controls, and PWA: deferred
 
 ## Current proof
@@ -31,9 +32,9 @@ A single **Start Fire** button deliberately starts playback in response to user 
 
 ## Current thin point
 
-Actual iPad Safari use. Run the combined scene and audio naturally for approximately 15–30 minutes and judge whether the sound supports the dying-fire illusion without becoming distracting or obviously repetitive.
+Real-use evaluation of v21 on iPad Safari. The protected v18 ember treatment and v19 restrained low flames are unchanged; only the default audio level was reduced to better match their dying-fire energy.
 
-Do not expand the feature set until this combined experience has been used and evaluated.
+Run the combined scene naturally and judge whether the 55% default now makes sound and visual activity feel like the same fire. Do not expand the feature set until this adjustment has been used and evaluated.
 
 ## Structure
 
