@@ -1,4 +1,4 @@
-import { FIREPLACE_SCENE } from './fireplace-scene.js?v=19';
+import { FIREPLACE_SCENE } from './fireplace-scene.js?v=20';
 
 export async function createFireScene(host) {
   const PIXI = window.PIXI;
