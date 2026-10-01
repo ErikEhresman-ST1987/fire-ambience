@@ -1,4 +1,4 @@
-import { FIREPLACE_SCENE } from './fireplace-scene.js?v=18';
+import { FIREPLACE_SCENE } from './fireplace-scene.js?v=19';
 
 export async function createFireScene(host) {
   const PIXI = window.PIXI;
@@ -18,9 +18,11 @@ export async function createFireScene(host) {
   const world = new PIXI.Container();
   const background = new PIXI.Sprite(texture);
   const emberLayer = new PIXI.Container();
+  const flameLayer = new PIXI.Container();
 
   world.addChild(background);
   world.addChild(emberLayer);
+  world.addChild(flameLayer);
   app.stage.addChild(world);
 
   // v18: preserve v17's proven ColorMatrix heat range, but distribute it
@@ -74,6 +76,69 @@ export async function createFireScene(host) {
     return { copy, color, region };
   });
 
+  // v19: restrained low-flame proof. This is intentionally a separate
+  // layer so the approved v18 ember treatment remains untouched.
+  const flameDefs = [
+    { x: 648, y: 622, w: 27, h: 48, period: 6900, phase: 0.5, max: 0.68, lean: -0.045 },
+    { x: 704, y: 615, w: 31, h: 57, period: 8400, phase: 2.7, max: 0.76, lean: 0.035 },
+    { x: 765, y: 620, w: 25, h: 44, period: 7600, phase: 4.8, max: 0.62, lean: -0.030 },
+    { x: 821, y: 617, w: 29, h: 52, period: 9300, phase: 1.6, max: 0.70, lean: 0.040 }
+  ];
+
+  const flameGradients = [];
+  const flames = flameDefs.map((def) => {
+    const holder = new PIXI.Container();
+    holder.position.set(def.x, def.y);
+
+    const outerGradient = new PIXI.FillGradient({
+      type: 'linear',
+      start: { x: 0, y: 0 },
+      end: { x: 0, y: 1 },
+      textureSpace: 'local',
+      colorStops: [
+        { offset: 0, color: '#ffd36a' },
+        { offset: 0.48, color: '#ff8a2b' },
+        { offset: 1, color: '#d94718' }
+      ]
+    });
+    const innerGradient = new PIXI.FillGradient({
+      type: 'linear',
+      start: { x: 0, y: 0 },
+      end: { x: 0, y: 1 },
+      textureSpace: 'local',
+      colorStops: [
+        { offset: 0, color: '#fff3b0' },
+        { offset: 0.58, color: '#ffc247' },
+        { offset: 1, color: '#ff6b1f' }
+      ]
+    });
+    flameGradients.push(outerGradient, innerGradient);
+
+    const outer = new PIXI.Graphics()
+      .moveTo(-def.w * 0.48, 0)
+      .bezierCurveTo(-def.w * 0.58, -def.h * 0.28, -def.w * 0.20, -def.h * 0.66, 0, -def.h)
+      .bezierCurveTo(def.w * 0.12, -def.h * 0.70, def.w * 0.60, -def.h * 0.30, def.w * 0.48, 0)
+      .closePath()
+      .fill(outerGradient);
+
+    const inner = new PIXI.Graphics()
+      .moveTo(-def.w * 0.25, -1)
+      .bezierCurveTo(-def.w * 0.28, -def.h * 0.22, -def.w * 0.08, -def.h * 0.46, 0, -def.h * 0.67)
+      .bezierCurveTo(def.w * 0.10, -def.h * 0.45, def.w * 0.30, -def.h * 0.20, def.w * 0.25, -1)
+      .closePath()
+      .fill(innerGradient);
+
+    // A very small blur softens vector edges without turning the proof into
+    // a filter-heavy flame system.
+    outer.filters = [new PIXI.BlurFilter({ strength: 1.2, quality: 2 })];
+    inner.filters = [new PIXI.BlurFilter({ strength: 0.7, quality: 1 })];
+    holder.blendMode = 'screen';
+    holder.addChild(outer, inner);
+    flameLayer.addChild(holder);
+
+    return { holder, def };
+  });
+
   function compose() {
     const rect = host.getBoundingClientRect();
     const viewW = Math.max(1, rect.width);
@@ -123,6 +188,25 @@ export async function createFireScene(host) {
       color.contrast(1.0 + heat * 0.35, true);
       copy.alpha = 0.18 + heat * 0.82;
     }
+
+    for (const { holder, def } of flames) {
+      if (reduceMotion.matches) {
+        holder.alpha = 0;
+        continue;
+      }
+
+      // Two slow cycles create irregular rise/recede behavior. The threshold
+      // gives each flame genuine quiet periods instead of a constant pulse.
+      const primary = Math.sin((elapsed / def.period) * Math.PI * 2 + def.phase);
+      const secondary = Math.sin((elapsed / (def.period * 0.61)) * Math.PI * 2 + def.phase * 1.73);
+      const raw = 0.5 + primary * 0.34 + secondary * 0.16;
+      const life = Math.max(0, Math.min(1, (raw - 0.31) / 0.69));
+
+      holder.alpha = life * def.max;
+      holder.scale.set(0.88 + life * 0.14, 0.72 + life * 0.32);
+      holder.rotation = def.lean + Math.sin((elapsed / (def.period * 0.43)) * Math.PI * 2 + def.phase) * 0.035;
+      holder.x = def.x + Math.sin((elapsed / (def.period * 0.37)) * Math.PI * 2 + def.phase * 0.7) * 2.2;
+    }
   });
 
   return {
@@ -130,6 +214,7 @@ export async function createFireScene(host) {
     destroy() {
       resizeObserver.disconnect();
       window.removeEventListener('orientationchange', compose);
+      for (const gradient of flameGradients) gradient.destroy();
       app.destroy(true, { children: true });
     }
   };
