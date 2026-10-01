@@ -4,7 +4,7 @@ export function createFireAudio() {
   const audio = new Audio(FIRE_AUDIO_URL);
   audio.loop = true;
   audio.preload = 'metadata';
-  audio.volume = 0.7;
+  audio.volume = 0.55;
 
   return {
     async start() { await audio.play(); },
