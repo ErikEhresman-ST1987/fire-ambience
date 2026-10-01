@@ -14,26 +14,39 @@ Primary target: iPad Safari. Browser-first delivery; offline normal use is a des
 - Project Foundation Plan v1.0: approved
 - Canonical low-ember fireplace scene: approved
 - Repository foundation: established
-- Ember animation: not yet implemented
-- Audio integration: not yet implemented
-- Flames, sparks, additional scenes, procedural audio, and PWA: deferred
+- v18 ember treatment: used/evaluated on iPad and approved as the protected ember checkpoint
+- v19 restrained low-flame proof: used on iPad and retained as the current visual checkpoint
+- v20 continuous-audio proof: implemented; actual iPad verification/evaluation pending
+- Sparks, additional scenes, procedural audio, polished controls, and PWA: deferred
+
+## Current proof
+
+The first complete experiential proof is now technically assembled:
+
+**approved fireplace scene + living embers + restrained low flames + one continuous local fire recording**
+
+The v20 audio layer uses assets/audio/Fireplace_wav_mp3.mp3, a user-prepared approximately 30-minute MP3 derived from a public-domain source and shortened/converted for this project. Preserve the original source URL/license record separately when available.
+
+A single **Start Fire** button deliberately starts playback in response to user interaction. After successful playback begins, the control recedes. The audio system owns playback/looping/volume lifecycle; procedural crackles/pops/snaps remain deferred.
 
 ## Current thin point
 
-Create the first bounded ember-animation proof against the approved fireplace scene. The effect should make localized ember regions brighten and fade independently and irregularly without looking like an overlay pasted onto a still image.
+Actual iPad Safari use. Run the combined scene and audio naturally for approximately 15–30 minutes and judge whether the sound supports the dying-fire illusion without becoming distracting or obviously repetitive.
 
-Stop after the ember proof is technically ready and test it on the actual iPad before expanding scope.
+Do not expand the feature set until this combined experience has been used and evaluated.
 
 ## Structure
 
-- `index.html` — browser entry surface
-- `css/` — interface and responsive presentation
-- `js/` — application coordination and scene/audio systems as they are introduced
-- `assets/scenes/` — canonical environment artwork and required visual assets
-- `assets/audio/` — locally served fire audio
-- `vendor/` — pinned local runtime dependencies such as PixiJS
+- index.html — browser entry surface and minimal semantic controls
+- css/ — interface and responsive presentation
+- js/app.js — startup coordination
+- js/fire-scene.js — PixiJS scene and fire effects
+- js/fire-audio.js — fire audio playback/looping/volume lifecycle
+- assets/scenes/ — canonical environment artwork
+- assets/audio/ — locally served fire audio
+- vendor/ — pinned local runtime dependencies such as PixiJS
 
-Production assets and PixiJS should be served locally. Do not add runtime CDN dependencies.
+Production assets and PixiJS are served locally. Do not add runtime CDN dependencies.
 
 ## Development rule
 
