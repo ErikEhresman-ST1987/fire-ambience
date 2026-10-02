@@ -56,7 +56,13 @@ export const FIRE_SCENES = Object.freeze({
       { x: 804, y: 819, rx: 23, ry: 10, peak: 0.89, period: 9500, phase: 4.6 },
       { x: 688, y: 774, rx: 18, ry: 10, peak: 0.88, period: 8700, phase: 2.9 },
       { x: 727, y: 770, rx: 20, ry: 11, peak: 0.97, period: 6800, phase: 5.0 },
-      { x: 766, y: 775, rx: 19, ry: 10, peak: 0.90, period: 9200, phase: 1.0 }
+      { x: 766, y: 775, rx: 19, ry: 10, peak: 0.90, period: 9200, phase: 1.0 },
+
+      // Small ember pockets carried into the log area.
+      { x: 700, y: 751, rx: 15, ry: 8, peak: 0.84, period: 7900, phase: 3.6 },
+      { x: 735, y: 744, rx: 16, ry: 8, peak: 0.91, period: 10100, phase: 0.8 },
+      { x: 770, y: 752, rx: 14, ry: 8, peak: 0.86, period: 7300, phase: 5.6 },
+      { x: 748, y: 765, rx: 13, ry: 7, peak: 0.89, period: 8800, phase: 2.2 }
     ],
     flames: [
       { x: 681, y: 795, w: 25, h: 46, period: 7200, phase: 0.7, max: 0.64, lean: -0.045 },
