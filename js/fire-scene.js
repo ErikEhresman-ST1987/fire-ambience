@@ -20,10 +20,12 @@ export async function createFireScene(host, sceneId = 'fireplace') {
   const background = new PIXI.Sprite(texture);
   const emberLayer = new PIXI.Container();
   const flameLayer = new PIXI.Container();
+  const ambientLightLayer = new PIXI.Container();
 
   world.addChild(background);
   world.addChild(emberLayer);
   world.addChild(flameLayer);
+  world.addChild(ambientLightLayer);
   app.stage.addChild(world);
 
   // Shared proven v18/v19 behavior; each scene supplies only its mapped regions.
@@ -49,6 +51,19 @@ export async function createFireScene(host, sceneId = 'fireplace') {
     container.addChild(mask);
     emberLayer.addChild(container);
 
+    return { copy, color, region };
+  });
+
+  const ambientLights = (scene.ambientLights || []).map((region) => {
+    const container = new PIXI.Container();
+    const copy = new PIXI.Sprite(texture);
+    const color = new PIXI.ColorMatrixFilter();
+    const mask = new PIXI.Graphics().ellipse(region.x, region.y, region.rx, region.ry).fill(0xffffff);
+    copy.mask = mask;
+    copy.filters = [color];
+    container.addChild(copy);
+    container.addChild(mask);
+    ambientLightLayer.addChild(container);
     return { copy, color, region };
   });
 
@@ -155,6 +170,20 @@ export async function createFireScene(host, sceneId = 'fireplace') {
       color.brightness(1.15 + heat * 2.85, false);
       color.contrast(1.0 + heat * 0.35, true);
       copy.alpha = 0.18 + heat * 0.82;
+    }
+
+    for (const { copy, color, region } of ambientLights) {
+      if (reduceMotion.matches) {
+        copy.alpha = 0;
+        continue;
+      }
+      const primary = Math.sin((elapsed / region.period) * Math.PI * 2 + region.phase);
+      const secondary = Math.sin((elapsed / (region.period * 1.83)) * Math.PI * 2 + region.phase * 1.47);
+      const life = Math.max(0, Math.min(1, 0.5 + primary * 0.36 + secondary * 0.14));
+      const amount = region.min + (region.max - region.min) * life;
+      color.reset();
+      color.brightness(1.04 + amount * 0.65, false);
+      copy.alpha = 0.10 + amount * 0.72;
     }
 
     for (const { holder, def } of flames) {
