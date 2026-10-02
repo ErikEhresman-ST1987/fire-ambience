@@ -70,6 +70,42 @@ export const FIRE_SCENES = Object.freeze({
       { x: 767, y: 792, w: 24, h: 43, period: 7800, phase: 4.9, max: 0.61, lean: -0.025 },
       { x: 803, y: 797, w: 25, h: 47, period: 9400, phase: 1.7, max: 0.66, lean: 0.035 }
     ]
+  }),
+  woodstove: Object.freeze({
+    id: 'woodstove',
+    label: 'Wood Stove',
+    image: 'assets/scenes/wood-stove.webp',
+    width: 1448,
+    height: 1086,
+    focus: { x: 0.5, y: 0.56 },
+    embers: [
+      { x: 635, y: 702, rx: 24, ry: 11, peak: 0.88, period: 7200, phase: 0.4 },
+      { x: 666, y: 711, rx: 27, ry: 12, peak: 0.96, period: 9100, phase: 2.5 },
+      { x: 699, y: 700, rx: 27, ry: 12, peak: 0.91, period: 6500, phase: 4.7 },
+      { x: 733, y: 713, rx: 28, ry: 12, peak: 1.00, period: 9800, phase: 1.4 },
+      { x: 767, y: 700, rx: 27, ry: 12, peak: 0.89, period: 7600, phase: 5.3 },
+      { x: 800, y: 711, rx: 25, ry: 11, peak: 0.95, period: 8600, phase: 3.2 },
+      { x: 650, y: 728, rx: 23, ry: 9, peak: 0.90, period: 8100, phase: 5.8 },
+      { x: 684, y: 733, rx: 26, ry: 9, peak: 0.98, period: 10400, phase: 1.9 },
+      { x: 721, y: 730, rx: 26, ry: 9, peak: 0.87, period: 7000, phase: 3.9 },
+      { x: 758, y: 733, rx: 26, ry: 9, peak: 0.95, period: 8900, phase: 0.3 },
+      { x: 791, y: 726, rx: 22, ry: 9, peak: 0.89, period: 9500, phase: 4.5 },
+      { x: 671, y: 683, rx: 16, ry: 9, peak: 0.86, period: 8700, phase: 2.8 },
+      { x: 709, y: 678, rx: 18, ry: 10, peak: 0.95, period: 6800, phase: 5.1 },
+      { x: 748, y: 684, rx: 17, ry: 9, peak: 0.89, period: 9200, phase: 1.1 },
+      { x: 785, y: 681, rx: 15, ry: 8, peak: 0.84, period: 7900, phase: 3.5 }
+    ],
+    flames: [
+      { x: 665, y: 704, w: 24, h: 45, period: 7200, phase: 0.6, max: 0.63, lean: -0.040 },
+      { x: 708, y: 695, w: 28, h: 54, period: 8600, phase: 2.9, max: 0.73, lean: 0.030 },
+      { x: 751, y: 701, w: 23, h: 42, period: 7800, phase: 4.8, max: 0.60, lean: -0.025 },
+      { x: 788, y: 704, w: 25, h: 47, period: 9400, phase: 1.8, max: 0.65, lean: 0.035 }
+    ],
+    ambientLights: [
+      { x: 342, y: 414, rx: 72, ry: 78, min: 0.05, max: 0.16, period: 9400, phase: 0.7 },
+      { x: 1022, y: 424, rx: 42, ry: 62, min: 0.04, max: 0.13, period: 11100, phase: 3.1 },
+      { x: 1112, y: 447, rx: 36, ry: 55, min: 0.04, max: 0.12, period: 8700, phase: 5.0 }
+    ]
   })
 });
 
