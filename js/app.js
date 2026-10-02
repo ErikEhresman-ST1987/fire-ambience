@@ -1,4 +1,4 @@
-import { createFireScene } from './fire-scene.js?v=27';
+import { createFireScene } from './fire-scene.js?v=28';
 import { createFireAudio } from './fire-audio.js?v=21';
 
 const host = document.querySelector('#app');
