@@ -1,6 +1,7 @@
-import { FIREPLACE_SCENE } from './fireplace-scene.js?v=20';
+import { getFireScene } from './fire-scenes.js?v=22';
 
-export async function createFireScene(host) {
+export async function createFireScene(host, sceneId = 'fireplace') {
+  const scene = getFireScene(sceneId);
   const PIXI = window.PIXI;
   if (!PIXI) throw new Error('PixiJS runtime was not loaded.');
 
@@ -14,7 +15,7 @@ export async function createFireScene(host) {
   });
   host.appendChild(app.canvas);
 
-  const texture = await PIXI.Assets.load(FIREPLACE_SCENE.image);
+  const texture = await PIXI.Assets.load(scene.image);
   const world = new PIXI.Container();
   const background = new PIXI.Sprite(texture);
   const emberLayer = new PIXI.Container();
@@ -25,34 +26,9 @@ export async function createFireScene(host) {
   world.addChild(flameLayer);
   app.stage.addChild(world);
 
-  // v18: preserve v17's proven ColorMatrix heat range, but distribute it
-  // through smaller irregular regions where glowing material makes sense.
-  // peak varies modestly so neighboring embers do not all reach the same heat.
-  const regions = [
-    // Coal bed beneath the logs.
-    { x: 592, y: 626, rx: 31, ry: 14, peak: 0.92, period: 6100, phase: 0.4 },
-    { x: 630, y: 638, rx: 27, ry: 13, peak: 1.00, period: 7900, phase: 2.8 },
-    { x: 665, y: 624, rx: 30, ry: 15, peak: 0.87, period: 5400, phase: 4.6 },
-    { x: 700, y: 642, rx: 32, ry: 13, peak: 0.96, period: 8800, phase: 1.5 },
-    { x: 739, y: 625, rx: 29, ry: 15, peak: 0.90, period: 6700, phase: 5.5 },
-    { x: 775, y: 641, rx: 31, ry: 13, peak: 1.00, period: 9300, phase: 3.3 },
-    { x: 813, y: 624, rx: 28, ry: 14, peak: 0.85, period: 7200, phase: 0.9 },
-    { x: 849, y: 639, rx: 27, ry: 12, peak: 0.95, period: 8200, phase: 4.1 },
-    { x: 612, y: 655, rx: 26, ry: 10, peak: 0.88, period: 7600, phase: 5.9 },
-    { x: 651, y: 659, rx: 30, ry: 10, peak: 0.97, period: 9800, phase: 1.9 },
-    { x: 692, y: 657, rx: 28, ry: 10, peak: 0.84, period: 6900, phase: 3.7 },
-    { x: 733, y: 661, rx: 31, ry: 10, peak: 0.93, period: 8500, phase: 0.2 },
-    { x: 777, y: 657, rx: 29, ry: 10, peak: 0.89, period: 10300, phase: 4.9 },
-    { x: 820, y: 654, rx: 28, ry: 10, peak: 0.98, period: 7400, phase: 2.4 },
-
-    // Smaller pockets visible between and immediately around the logs.
-    { x: 626, y: 604, rx: 20, ry: 11, peak: 0.86, period: 8700, phase: 3.0 },
-    { x: 675, y: 596, rx: 18, ry: 10, peak: 0.94, period: 6400, phase: 5.1 },
-    { x: 718, y: 607, rx: 22, ry: 11, peak: 0.88, period: 9600, phase: 1.1 },
-    { x: 763, y: 596, rx: 19, ry: 10, peak: 1.00, period: 7100, phase: 4.4 },
-    { x: 805, y: 607, rx: 21, ry: 11, peak: 0.85, period: 9000, phase: 2.0 },
-    { x: 842, y: 600, rx: 18, ry: 10, peak: 0.92, period: 6800, phase: 5.8 }
-  ];
+  // Shared proven v18/v19 behavior; each scene supplies only its mapped regions.
+  const regions = scene.embers;
+  const flameDefs = scene.flames;
 
   const emberRegions = regions.map((region) => {
     const container = new PIXI.Container();
@@ -76,15 +52,7 @@ export async function createFireScene(host) {
     return { copy, color, region };
   });
 
-  // v19: restrained low-flame proof. This is intentionally a separate
-  // layer so the approved v18 ember treatment remains untouched.
-  const flameDefs = [
-    { x: 648, y: 622, w: 27, h: 48, period: 6900, phase: 0.5, max: 0.68, lean: -0.045 },
-    { x: 704, y: 615, w: 31, h: 57, period: 8400, phase: 2.7, max: 0.76, lean: 0.035 },
-    { x: 765, y: 620, w: 25, h: 44, period: 7600, phase: 4.8, max: 0.62, lean: -0.030 },
-    { x: 821, y: 617, w: 29, h: 52, period: 9300, phase: 1.6, max: 0.70, lean: 0.040 }
-  ];
-
+  // Restrained low-flame treatment remains a separate layer from approved embers.
   const flameGradients = [];
   const flames = flameDefs.map((def) => {
     const holder = new PIXI.Container();
@@ -146,15 +114,15 @@ export async function createFireScene(host) {
     app.renderer.resize(viewW, viewH);
 
     const scale = Math.max(
-      viewW / FIREPLACE_SCENE.width,
-      viewH / FIREPLACE_SCENE.height
+      viewW / scene.width,
+      viewH / scene.height
     );
     world.scale.set(scale);
 
-    const scaledW = FIREPLACE_SCENE.width * scale;
-    const scaledH = FIREPLACE_SCENE.height * scale;
-    world.x = (viewW - scaledW) * FIREPLACE_SCENE.focus.x;
-    world.y = (viewH - scaledH) * FIREPLACE_SCENE.focus.y;
+    const scaledW = scene.width * scale;
+    const scaledH = scene.height * scale;
+    world.x = (viewW - scaledW) * scene.focus.x;
+    world.y = (viewH - scaledH) * scene.focus.y;
   }
 
   compose();
