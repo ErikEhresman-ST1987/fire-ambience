@@ -17,14 +17,15 @@ Primary target: iPad Safari. Browser-first delivery; offline normal use is a des
 - v18 ember treatment: used/evaluated on iPad and approved as the protected ember checkpoint
 - v19 restrained low-flame proof: used on iPad and retained as the current visual checkpoint
 - v20 continuous-audio proof: verified/evaluated on iPad; audio was somewhat more vigorous than the restrained dying-fire visuals
-- v21 energy-match adjustment: default audio level reduced from 70% to 55%; published for real-use evaluation
-- Sparks, additional scenes, procedural audio, polished controls, and PWA: deferred
+- v21 energy-match adjustment: default audio level reduced from 70% to 55%; retained
+- v22 campfire scene: implemented with shared proven ember/flame engine, scene-specific effect mapping, and the existing fire audio; target-device evaluation pending
+- Sparks, additional scenes beyond campfire, procedural audio, polished controls, and PWA: deferred
 
 ## Current proof
 
 The first complete experiential proof is now technically assembled:
 
-**approved fireplace scene + living embers + restrained low flames + one continuous local fire recording**
+**two selectable fire environments + shared living-ember/low-flame behavior + one continuous local fire recording**
 
 The v20 audio layer uses assets/audio/Fireplace_wav_mp3.mp3, a user-prepared approximately 30-minute MP3 derived from a public-domain source and shortened/converted for this project. Preserve the original source URL/license record separately when available.
 
@@ -32,16 +33,17 @@ A single **Start Fire** button deliberately starts playback in response to user 
 
 ## Current thin point
 
-Real-use evaluation of v21 on iPad Safari. The protected v18 ember treatment and v19 restrained low flames are unchanged; only the default audio level was reduced to better match their dying-fire energy.
+Actual iPad Safari verification and visual evaluation of the new v22 campfire mapping. The protected fireplace ember/flame values are preserved unchanged in the new scene-definition structure.
 
-Run the combined scene naturally and judge whether the 55% default now makes sound and visual activity feel like the same fire. Do not expand the feature set until this adjustment has been used and evaluated.
+Confirm that Fireplace still looks unchanged, then select Campfire before starting the fire and judge whether its localized ember regions and restrained flames align naturally with the campfire artwork. Refine only the campfire mapping if evidence shows a placement or intensity problem.
 
 ## Structure
 
 - index.html — browser entry surface and minimal semantic controls
 - css/ — interface and responsive presentation
 - js/app.js — startup coordination
-- js/fire-scene.js — PixiJS scene and fire effects
+- js/fire-scene.js — shared PixiJS fire-effect engine
+- js/fire-scenes.js — per-environment artwork, responsive focus, and ember/flame mappings
 - js/fire-audio.js — fire audio playback/looping/volume lifecycle
 - assets/scenes/ — canonical environment artwork
 - assets/audio/ — locally served fire audio
